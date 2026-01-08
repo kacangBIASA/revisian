@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_NAME = 'ridhoaja/queuenow-native'   // ganti username kamu
+    IMAGE_NAME = 'ridhoaja/queuenow'   // ganti username kamu
     REGISTRY_CREDENTIALS = 'dockerhub-credentials'
     CONTAINER_NAME = 'queuenow_app'
     APP_PORT = '8085'

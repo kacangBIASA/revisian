@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Jangan rewrite kalau request ke folder public (asset statis)
+RewriteCond %{REQUEST_URI} ^/public/ [OR]
+RewriteCond %{REQUEST_URI} ^/public$
+RewriteRule ^ - [L]
+
+# Kalau file/folder ada, biarkan (mis. favicon)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Selain itu semua ke index.php
+RewriteRule ^ index.php [L]

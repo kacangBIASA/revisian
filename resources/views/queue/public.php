@@ -46,18 +46,21 @@
         </div>
 
         <!-- Tiket Saya -->
-        <div class="card" id="myTicketCard" style="display:none; margin-bottom:16px;">
-          <div style="font-weight:700; margin-bottom:6px;">Tiket Saya</div>
-
-          <div style="font-size:44px; font-weight:900; line-height:1;" id="myTicketNumber">-</div>
-          <div style="opacity:.85; margin-top:8px;" id="myTicketMeta"></div>
-
-          <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-            <button type="button" id="btnCopyTicket" class="btn">Salin Nomor</button>
-            <button type="button" id="btnClearTicket" class="btn">Hapus</button>
+        <div class="card ticket-card" id="myTicketCard" style="display:none;">
+          <div class="ticket-head">
+            <div class="ticket-title">Tiket Saya</div>
+            <div class="ticket-badge">TERSIMPAN</div>
           </div>
 
-          <div class="muted" style="margin-top:10px;font-size:12px;">
+          <div class="ticket-number" id="myTicketNumber">A-0</div>
+          <div class="ticket-meta" id="myTicketMeta"></div>
+
+          <div class="ticket-actions">
+            <button type="button" id="btnCopyTicket" class="btn btn-primary btn-sm">Salin Nomor</button>
+            <button type="button" id="btnClearTicket" class="btn btn-ghost btn-sm">Hapus</button>
+          </div>
+
+          <div class="ticket-hint">
             Nomor ini tersimpan di perangkat kamu. Kalau halaman ke-refresh, tiket tetap muncul.
           </div>
         </div>
@@ -117,7 +120,12 @@
     function loadTicketFromStorage() {
       const raw = localStorage.getItem(QN.storageKey);
       if (!raw) return null;
-      try { return JSON.parse(raw); } catch (e) { localStorage.removeItem(QN.storageKey); return null; }
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        localStorage.removeItem(QN.storageKey);
+        return null;
+      }
     }
 
     function saveTicketToStorage(ticket) {
@@ -138,7 +146,12 @@
         const m = QN.sessionTicket.match(/(\d+)/);
         const num = m ? parseInt(m[1], 10) : null;
         if (num) {
-          const t = { queue_number: num, display: QN.sessionTicket, status: 'WAITING', queue_date: (new Date()).toISOString().slice(0,10) };
+          const t = {
+            queue_number: num,
+            display: QN.sessionTicket,
+            status: 'WAITING',
+            queue_date: (new Date()).toISOString().slice(0, 10)
+          };
           saveTicketToStorage(t);
           renderMyTicket(t);
         }
@@ -201,7 +214,11 @@
         const url = new URL(QN.statusUrl, window.location.origin);
         url.searchParams.set('token', QN.token);
 
-        const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const res = await fetch(url.toString(), {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
         if (!res.ok) return;
 
         const data = await res.json();

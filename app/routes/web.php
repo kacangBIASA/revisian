@@ -33,6 +33,7 @@ $router->post('/branches/delete', [BranchController::class, 'delete'], [AuthMidd
 
 // Public queue (scan QR / online)
 $router->get('/q', [QueueController::class, 'publicPage']);
+$router->get('/q/status', [QueueController::class, 'publicStatus']);
 $router->post('/q/take', [QueueController::class, 'publicTake']);
 
 

@@ -60,6 +60,22 @@ class QueueController extends Controller
         ];
     }
 
+    private function wantsJson(): bool
+    {
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $xhr    = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        return str_contains($accept, 'application/json') || strtolower($xhr) === 'xmlhttprequest';
+    }
+
+    private function json(array $body, int $status = 200): never
+    {
+        http_response_code($status);
+        header('Content-Type: application/json');
+        echo json_encode($body);
+        exit;
+    }
+
+
     // =========================
     // PUBLIC PAGE: /q?token=...
     // =========================
@@ -137,7 +153,13 @@ class QueueController extends Controller
     // =========================
     public function publicTake()
     {
+        $isJson = $this->wantsJson();
+
+        // CSRF
         if (!CSRF::verify($_POST['_csrf'] ?? null)) {
+            if ($isJson) {
+                $this->json(['ok' => false, 'message' => 'CSRF token tidak valid.'], 419);
+            }
             Session::flash('error', 'CSRF token tidak valid.');
             redirect('/q?token=' . urlencode((string)($_POST['token'] ?? '')));
         }
@@ -147,18 +169,20 @@ class QueueController extends Controller
         if (!in_array($source, ['QR', 'ONLINE'], true)) $source = 'QR';
 
         if ($token === '') {
+            if ($isJson) $this->json(['ok' => false, 'message' => 'Token tidak valid.'], 400);
             Session::flash('error', 'Token tidak valid.');
             redirect('/q');
         }
 
         $branch = DB::fetchOne("
-            SELECT id, start_queue_number
-            FROM branches
-            WHERE qr_token=?
-            LIMIT 1
-        ", [$token]);
+        SELECT id, start_queue_number
+        FROM branches
+        WHERE qr_token=?
+        LIMIT 1
+    ", [$token]);
 
         if (!$branch) {
+            if ($isJson) $this->json(['ok' => false, 'message' => 'QR token tidak ditemukan.'], 404);
             Session::flash('error', 'QR token tidak ditemukan.');
             redirect('/q');
         }
@@ -169,11 +193,96 @@ class QueueController extends Controller
         $startNo = (int)($branch['start_queue_number'] ?? 1);
         if ($startNo <= 0) $startNo = 1;
 
+        // identitas device + IP (dari helpers.php yang sudah kamu revisi)
+        $clientUuid = qn_client_uuid();
+        $clientIp   = qn_client_ip();
+
         $pdo = DB::pdo();
 
         try {
             $pdo->beginTransaction();
 
+            // =========================
+            // (A) Rate limit (anti spam)
+            // =========================
+            // 1) per device: max 2 request / 60 detik
+            $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM queue_tickets
+            WHERE client_uuid = ?
+              AND taken_at >= (NOW() - INTERVAL 60 SECOND)
+        ");
+            $stmt->execute([$clientUuid]);
+            $countDevice = (int)$stmt->fetchColumn();
+            if ($countDevice >= 2) {
+                $pdo->rollBack();
+                if ($isJson) $this->json(['ok' => false, 'message' => 'Terlalu sering ambil antrean. Coba lagi sebentar.'], 429);
+                Session::flash('error', 'Terlalu sering ambil antrean. Coba lagi sebentar.');
+                redirect('/q?token=' . urlencode($token));
+            }
+
+            // 2) per IP: max 5 request / 60 detik
+            $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM queue_tickets
+            WHERE client_ip = ?
+              AND taken_at >= (NOW() - INTERVAL 60 SECOND)
+        ");
+            $stmt->execute([$clientIp]);
+            $countIp = (int)$stmt->fetchColumn();
+            if ($countIp >= 5) {
+                $pdo->rollBack();
+                if ($isJson) $this->json(['ok' => false, 'message' => 'Terlalu banyak permintaan dari jaringan ini. Coba lagi nanti.'], 429);
+                Session::flash('error', 'Terlalu banyak permintaan dari jaringan ini. Coba lagi nanti.');
+                redirect('/q?token=' . urlencode($token));
+            }
+
+            // ==========================================================
+            // (B) 1 device = 1 tiket aktif per cabang per hari (anti spam)
+            // ==========================================================
+            $stmt = $pdo->prepare("
+            SELECT id, queue_number, status, taken_at
+            FROM queue_tickets
+            WHERE branch_id = ?
+              AND queue_date = ?
+              AND client_uuid = ?
+              AND status IN ('WAITING','CALLED')
+            ORDER BY id DESC
+            LIMIT 1
+        ");
+            $stmt->execute([$branchId, $today, $clientUuid]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                $pdo->commit();
+
+                $ticketNo = (int)$existing['queue_number'];
+                $_SESSION['public_ticket_' . $branchId] = 'A-' . $ticketNo;
+
+                if ($isJson) {
+                    $this->json([
+                        'ok' => true,
+                        'message' => 'Kamu masih punya tiket aktif.',
+                        'is_existing' => true,
+                        'ticket' => [
+                            'id' => (int)$existing['id'],
+                            'queue_number' => $ticketNo,
+                            'status' => $existing['status'],
+                            'taken_at' => $existing['taken_at'],
+                            'queue_date' => $today,
+                            'branch_id' => $branchId,
+                            'display' => 'A-' . $ticketNo,
+                        ],
+                    ], 200);
+                }
+
+                Session::flash('success', 'Kamu masih punya tiket aktif: A-' . $ticketNo);
+                redirect('/q?token=' . urlencode($token));
+            }
+
+            // =========================
+            // (C) Create tiket baru aman
+            // =========================
             // lock/create counter (dan auto-sync dari data ticket existing)
             $counter = $this->lockOrCreateCounter($pdo, $branchId, $today, $startNo);
             $last    = (int)$counter['last_number'];
@@ -181,34 +290,55 @@ class QueueController extends Controller
             $next = $last + 1;
             if ($next < $startNo) $next = $startNo;
 
-            // insert ticket (AMAN dari duplicate karena counter di-lock)
+            // insert ticket (tambahkan client_uuid & client_ip)
             $ins = $pdo->prepare("
-                INSERT INTO queue_tickets
-                    (branch_id, queue_date, queue_number, source, status, taken_at)
-                VALUES
-                    (?, ?, ?, ?, 'WAITING', NOW())
-            ");
-            $ins->execute([$branchId, $today, $next, $source]);
+            INSERT INTO queue_tickets
+                (branch_id, queue_date, queue_number, source, client_uuid, client_ip, status, taken_at)
+            VALUES
+                (?, ?, ?, ?, ?, ?, 'WAITING', NOW())
+        ");
+            $ins->execute([$branchId, $today, $next, $source, $clientUuid, $clientIp]);
 
             // update counter
             $upd = $pdo->prepare("
-                UPDATE branch_daily_counters
-                SET last_number=?, updated_at=NOW()
-                WHERE branch_id=? AND queue_date=?
-            ");
+            UPDATE branch_daily_counters
+            SET last_number=?, updated_at=NOW()
+            WHERE branch_id=? AND queue_date=?
+        ");
             $upd->execute([$next, $branchId, $today]);
+
+            $ticketId = (int)$pdo->lastInsertId();
 
             $pdo->commit();
 
-            // simpan ke session agar balik tampil di halaman
+            // simpan ke session agar tampil di halaman
             $_SESSION['public_ticket_' . $branchId] = 'A-' . $next;
+
+            if ($isJson) {
+                $this->json([
+                    'ok' => true,
+                    'message' => 'Tiket berhasil dibuat.',
+                    'is_existing' => false,
+                    'ticket' => [
+                        'id' => $ticketId,
+                        'queue_number' => $next,
+                        'status' => 'WAITING',
+                        'queue_date' => $today,
+                        'branch_id' => $branchId,
+                        'display' => 'A-' . $next,
+                    ],
+                ], 200);
+            }
 
             Session::flash('success', 'Berhasil ambil antrean: A-' . $next);
             redirect('/q?token=' . urlencode($token));
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
 
-            // tampilkan error singkat tapi jelas
+            if ($isJson) {
+                $this->json(['ok' => false, 'message' => 'Gagal ambil antrean: ' . $e->getMessage()], 500);
+            }
+
             Session::flash('error', 'Gagal ambil antrean: ' . $e->getMessage());
             redirect('/q?token=' . urlencode($token));
         }

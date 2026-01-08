@@ -11,9 +11,6 @@
           <div class="muted"><?= htmlspecialchars($branch['address']) ?></div>
         <?php endif; ?>
       </div>
-      <div class="page-actions">
-        <a class="btn btn-ghost" href="<?= htmlspecialchars(base_url('/')) ?>">Beranda</a>
-      </div>
     </div>
 
     <?php if (!empty($error)): ?>
@@ -46,6 +43,20 @@
             </div>
           </div>
         </div>
+
+        <!-- Tiket Saya (akan muncul setelah ambil antrean / setelah reload) -->
+        <div class="card" id="myTicketCard" style="display:none; margin-bottom:16px;">
+          <div style="font-weight:700; margin-bottom:6px;">Tiket Saya</div>
+
+          <div style="font-size:44px; font-weight:900; line-height:1;" id="myTicketNumber">-</div>
+          <div style="opacity:.85; margin-top:8px;" id="myTicketMeta"></div>
+
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button type="button" id="btnCopyTicket" class="btn">Salin Nomor</button>
+            <button type="button" id="btnClearTicket" class="btn">Hapus</button>
+          </div>
+        </div>
+
 
         <div class="card card-soft queue-box">
           <div class="card-title">Ambil Antrean Sekarang</div>

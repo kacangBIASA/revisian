@@ -276,3 +276,9 @@ ALTER TABLE branch_daily_counters
   DROP INDEX uq_counter_branch_date,
   ADD UNIQUE KEY uq_counter_branch_date_session (branch_id, queue_date, session_no),
   ADD KEY idx_counter_branch_date_session (branch_id, queue_date, session_no);
+
+ALTER TABLE queue_tickets
+  ADD COLUMN client_uuid VARCHAR(64) NULL AFTER source,
+  ADD COLUMN client_ip VARCHAR(45) NULL AFTER client_uuid,
+  ADD KEY idx_ticket_branch_date_client (branch_id, queue_date, client_uuid),
+  ADD KEY idx_ticket_taken_ip (taken_at, client_ip);

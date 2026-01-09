@@ -383,6 +383,8 @@ class QueueController extends Controller
         // sedang dipanggil (CALLED terbaru) untuk display besar
         $calledNow = $called[0]['queue_number'] ?? null;
 
+        $publicUrl = base_url('/q?token=' . urlencode((string)($branch['qr_token'] ?? '')));
+
         return View::render('queue/manage', [
             'title'     => 'Kelola Antrean - QueueNow',
             'branches'  => $branches,
@@ -392,9 +394,14 @@ class QueueController extends Controller
             'skipped'   => $skipped,
             'done'      => $done,
             'calledNow' => $calledNow,
+
             'error'     => Session::flash('error'),
             'success'   => Session::flash('success'),
-        ]);
+
+            // ✅ kirim 2 key supaya aman jika View::render() mengubah key jadi lowercase
+            'publicUrl' => $publicUrl,
+            'publicurl' => $publicUrl,
+        ], 'layouts/app');
     }
 
     // POST /queues/update-status?id=..&branch_id=..&act=skip|done

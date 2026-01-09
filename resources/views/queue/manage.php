@@ -1,14 +1,18 @@
 <?php
 // resources/views/queue/manage.php
 $branchId = (int)$branch['id'];
-function qnum($n){ return 'A-' . (int)$n; }
+function qnum($n)
+{
+  return 'A-' . (int)$n;
+}
 ?>
 <section class="page">
   <div class="page-head">
     <div>
       <div class="muted">Kelola Antrean</div>
       <h2 class="page-title"><?= htmlspecialchars($branch['name']) ?></h2>
-      <div class="muted">Public link: <span class="mono"><?= htmlspecialchars($publicUrl) ?></span></div>
+      <div class="muted">Public link: <span class="mono"><?= htmlspecialchars($publicUrl ?? $publicurl ?? '') ?></span>
+      </div>
     </div>
 
     <div class="page-actions">
@@ -41,7 +45,7 @@ function qnum($n){ return 'A-' . (int)$n; }
       <div style="margin-top:10px;">
         <?php foreach ($branches as $br): ?>
           <a class="btn <?= ((int)$br['id'] === $branchId) ? 'btn-primary' : 'btn-secondary' ?>"
-             href="<?= htmlspecialchars(base_url('/queues/manage?branch_id=' . (int)$br['id'])) ?>">
+            href="<?= htmlspecialchars(base_url('/queues/manage?branch_id=' . (int)$br['id'])) ?>">
             <?= htmlspecialchars($br['name']) ?>
           </a>
         <?php endforeach; ?>
@@ -72,7 +76,7 @@ function qnum($n){ return 'A-' . (int)$n; }
 
               <div class="queue-actions">
                 <form method="POST"
-                      action="<?= htmlspecialchars(base_url('/queues/action?branch_id=' . $branchId . '&id=' . (int)$t['id'])) ?>">
+                  action="<?= htmlspecialchars(base_url('/queues/action?branch_id=' . $branchId . '&id=' . (int)$t['id'])) ?>">
                   <input type="hidden" name="_csrf" value="<?= htmlspecialchars(CSRF::token()) ?>">
                   <button class="btn btn-secondary btn-sm" type="submit" name="action" value="call">Panggil</button>
                   <button class="btn btn-ghost btn-sm" type="submit" name="action" value="skip">Skip</button>
@@ -104,7 +108,7 @@ function qnum($n){ return 'A-' . (int)$n; }
 
               <div class="queue-actions">
                 <form method="POST"
-                      action="<?= htmlspecialchars(base_url('/queues/action?branch_id=' . $branchId . '&id=' . (int)$t['id'])) ?>">
+                  action="<?= htmlspecialchars(base_url('/queues/action?branch_id=' . $branchId . '&id=' . (int)$t['id'])) ?>">
                   <input type="hidden" name="_csrf" value="<?= htmlspecialchars(CSRF::token()) ?>">
                   <button class="btn btn-primary btn-sm" type="submit" name="action" value="done">Selesai</button>
                   <button class="btn btn-ghost btn-sm" type="submit" name="action" value="skip">Skip</button>

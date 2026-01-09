@@ -513,4 +513,83 @@ class QueueController extends Controller
         Session::flash('success', 'Memanggil berikutnya: A-' . (int)$next['queue_number']);
         redirect('/queues/manage?branch_id=' . $branchId);
     }
+
+    // POST /queues/action?branch_id=..&id=..
+    public function action()
+    {
+        // CSRF
+        if (!CSRF::verify($_POST['_csrf'] ?? null)) {
+            Session::flash('error', 'CSRF token tidak valid.');
+            redirect('/queues/manage?branch_id=' . (int)($_GET['branch_id'] ?? 0));
+        }
+
+        $ownerId  = (int)Auth::id();
+        $branchId = (int)($_GET['branch_id'] ?? 0);
+        $ticketId = (int)($_GET['id'] ?? 0);
+        $act      = (string)($_POST['action'] ?? ''); // call | skip | done
+
+        if ($branchId <= 0 || $ticketId <= 0) {
+            Session::flash('error', 'Parameter tidak valid.');
+            redirect('/queues/manage');
+        }
+
+        // Pastikan branch milik owner
+        $branch = DB::fetchOne("
+        SELECT b.id
+        FROM branches b
+        JOIN businesses bs ON bs.id=b.business_id
+        WHERE b.id=? AND bs.owner_id=?
+        LIMIT 1
+    ", [$branchId, $ownerId]);
+
+        if (!$branch) {
+            Session::flash('error', 'Akses ditolak.');
+            redirect('/queues/manage');
+        }
+
+        $today = date('Y-m-d');
+
+        // Ticket harus branch ini + hari ini
+        $ticket = DB::fetchOne("
+        SELECT *
+        FROM queue_tickets
+        WHERE id=? AND branch_id=? AND queue_date=?
+        LIMIT 1
+    ", [$ticketId, $branchId, $today]);
+
+        if (!$ticket) {
+            Session::flash('error', 'Antrean tidak ditemukan.');
+            redirect('/queues/manage?branch_id=' . $branchId);
+        }
+
+        $status = (string)$ticket['status'];
+        $qno    = 'A-' . (int)$ticket['queue_number'];
+
+        if ($act === 'call') {
+            if ($status !== 'WAITING') {
+                Session::flash('error', 'Hanya antrean WAITING yang bisa dipanggil.');
+                redirect('/queues/manage?branch_id=' . $branchId);
+            }
+            DB::exec("UPDATE queue_tickets SET status='CALLED', called_at=NOW() WHERE id=?", [$ticketId]);
+            Session::flash('success', 'Memanggil: ' . $qno);
+        } elseif ($act === 'skip') {
+            if (!in_array($status, ['WAITING', 'CALLED'], true)) {
+                Session::flash('error', 'Antrean ini tidak bisa di-skip.');
+                redirect('/queues/manage?branch_id=' . $branchId);
+            }
+            DB::exec("UPDATE queue_tickets SET status='SKIPPED', finished_at=NOW() WHERE id=?", [$ticketId]);
+            Session::flash('success', 'Skip: ' . $qno);
+        } elseif ($act === 'done') {
+            if ($status !== 'CALLED') {
+                Session::flash('error', 'Hanya antrean CALLED yang bisa diselesaikan.');
+                redirect('/queues/manage?branch_id=' . $branchId);
+            }
+            DB::exec("UPDATE queue_tickets SET status='DONE', finished_at=NOW() WHERE id=?", [$ticketId]);
+            Session::flash('success', 'Selesai: ' . $qno);
+        } else {
+            Session::flash('error', 'Aksi tidak valid.');
+        }
+
+        redirect('/queues/manage?branch_id=' . $branchId);
+    }
 }

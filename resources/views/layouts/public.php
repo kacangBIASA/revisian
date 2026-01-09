@@ -17,7 +17,7 @@
   <header class="topbar">
     <div class="container">
       <div class="nav">
-        <a class="brand" href="<?= htmlspecialchars(base_url('/')) ?>">
+        <a class="brand">
           <span class="brand-badge">Q</span>
           <span class="brand-text">QueueNow</span>
         </a>

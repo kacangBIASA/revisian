@@ -52,7 +52,7 @@
             <div class="ticket-badge">TERSIMPAN</div>
           </div>
 
-          <div class="ticket-number" id="myTicketNumber">A-0</div>
+          <div class="tiket-number" id="myTicketNumber">A-0</div>
           <div class="ticket-meta" id="myTicketMeta"></div>
 
           <div class="ticket-actions">

@@ -997,6 +997,9 @@ html[data-theme="light"] .tiket-card {
   margin: 6px 0 8px;
   color: rgba(232, 238, 252, 0.95);
 }
+html[data-theme="light"] .ticket-number {
+  color: #4b5bff;
+}
 
 .ticket-meta {
   font-size: 14px;

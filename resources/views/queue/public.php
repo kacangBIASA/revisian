@@ -61,7 +61,7 @@
           </div>
 
           <div class="ticket-hint">
-            Nomor ini tersimpan di perangkat kamu. Kalau halaman ke-refresh, tiket tetap muncul. tes
+            Nomor ini tersimpan di perangkat kamu. Kalau halaman ke-refresh, tiket tetap muncul. tes2
           </div>
         </div>
 

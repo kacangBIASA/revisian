@@ -954,7 +954,7 @@ html[data-theme="light"] .input {
 }
 
 /* Override khusus LIGHT mode */
-html[data-theme="light"] .ticket-card {
+html[data-theme="light"] .tiket-card {
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
 

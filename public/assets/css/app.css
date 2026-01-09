@@ -931,13 +931,25 @@ html[data-theme="light"] .input {
   align-items: start;
 }
 
-/* Card tiket */
+/* Card tiket (default = DARK friendly) */
 .ticket-card{
   padding: 18px;
-  border: 1px solid rgba(120, 92, 255, .25);
-  background: linear-gradient(180deg, rgba(120,92,255,.06), rgba(255,255,255,.85));
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
   border-radius: 16px;
+  border: 1px solid rgba(120, 92, 255, .28);
+
+  /* gelap + glow ungu tipis, aman buat dark mode */
+  background:
+    radial-gradient(800px 340px at 90% -10%, rgba(120,92,255,.22), transparent 60%),
+    rgba(255,255,255,.04);
+
+  box-shadow: 0 14px 40px rgba(0,0,0,.25);
+}
+
+/* Override khusus LIGHT mode */
+html[data-theme="light"] .ticket-card{
+  border: 1px solid rgba(120, 92, 255, .22);
+  background: linear-gradient(180deg, rgba(120,92,255,.08), rgba(255,255,255,.92));
+  box-shadow: 0 10px 30px rgba(2,6,23,.08);
 }
 
 .ticket-head{
@@ -958,7 +970,8 @@ html[data-theme="light"] .input {
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(120,92,255,.35);
-  background: rgba(120,92,255,.10);
+  background: rgba(120,92,255,.12);
+  color: var(--text);
 }
 
 .ticket-number{
@@ -967,11 +980,15 @@ html[data-theme="light"] .input {
   font-weight: 900;
   letter-spacing: -1px;
   margin: 6px 0 8px;
+  color: #cfd6ff; /* lebih “nendang” di dark */
+}
+html[data-theme="light"] .ticket-number{
+  color: #3b4bff;
 }
 
 .ticket-meta{
-  opacity: .85;
   font-size: 14px;
+  color: var(--muted);
 }
 
 .ticket-actions{
@@ -982,35 +999,18 @@ html[data-theme="light"] .input {
 }
 
 .ticket-hint{
-  opacity: .7;
   font-size: 12px;
   margin-top: 12px;
+  color: var(--muted);
 }
 
-/* Sedang dipanggil (biar jelas dan konsisten) */
+/* (opsional tapi biar konsisten di dark mode) */
 .called-wrap{
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(0,0,0,.06);
-  background: rgba(255,255,255,.55);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
 }
-
-.called-number{
-  font-size: 48px;
-  line-height: 1;
-  font-weight: 900;
-  margin-top: 6px;
-}
-
-/* Tombol disabled biar tidak "jelek" */
-button:disabled{
-  opacity: .65;
-  cursor: not-allowed;
-}
-
-/* Responsive: kalau layar kecil, jadi 1 kolom */
-@media (max-width: 960px){
-  .queue-public-grid{
-    grid-template-columns: 1fr;
-  }
+html[data-theme="light"] .called-wrap{
+  background: rgba(255,255,255,.70);
 }

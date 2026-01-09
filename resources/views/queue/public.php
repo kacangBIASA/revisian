@@ -46,7 +46,7 @@
         </div>
 
         <!-- Tiket Saya -->
-        <div class="card ticket-card" id="myTicketCard" style="display:none;">
+        <div class="card tiket-card" id="myTicketCard" style="display:none;">
           <div class="ticket-head">
             <div class="ticket-title">Tiket Saya</div>
             <div class="ticket-badge">TERSIMPAN</div>

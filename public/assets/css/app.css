@@ -1050,3 +1050,58 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+.tiket-card {
+  /* bikin isi tidak mepet border */
+  padding: 22px 22px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+
+  /* dark-friendly */
+  background:
+    radial-gradient(900px 380px at 90% -10%, rgba(91, 108, 255, 0.22), transparent 60%),
+    radial-gradient(700px 320px at 10% 110%, rgba(138, 92, 255, 0.14), transparent 60%),
+    var(--card);
+}
+
+/* Light mode */
+html[data-theme="light"] .ticket-card,
+html[data-theme="light"] .tiket-card {
+  background:
+    radial-gradient(900px 380px at 90% -10%, rgba(91, 108, 255, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.74));
+}
+
+/* rapihin jarak elemen di dalam kartu */
+.ticket-head { margin-bottom: 12px; }
+.ticket-title { font-weight: 850; }
+
+.ticket-badge {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 108, 255, 0.35);
+  background: rgba(91, 108, 255, 0.14);
+}
+
+/* nomor tiket jangan terlalu “nempel” */
+.ticket-number {
+  margin: 10px 0 10px;
+  line-height: 1;
+}
+
+/* meta & hint kasih ruang + keterbacaan */
+.ticket-meta {
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.ticket-actions { margin-top: 14px; }
+
+.ticket-hint {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  line-height: 1.45;
+}

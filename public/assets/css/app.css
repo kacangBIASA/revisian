@@ -924,78 +924,114 @@ html[data-theme="light"] .input {
 
 /* ===== QueueNow Public Queue UI ===== */
 
-.queue-public-grid{
+.queue-public-grid {
   display: grid;
-  grid-template-columns: 1.1fr .9fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 18px;
   align-items: start;
 }
 
-/* Card tiket */
-.ticket-card{
+/* Card tiket (default = DARK mode, karena :root kamu default gelap) */
+.ticket-card {
   padding: 18px;
-  border: 1px solid rgba(120, 92, 255, .25);
-  /* background: linear-gradient(180deg, rgba(120,92,255,.06), rgba(255,255,255,.85)); */
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
   border-radius: 16px;
+
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+
+  /* dark-friendly: pakai card color + glow ungu halus */
+  background: radial-gradient(
+      900px 380px at 90% -10%,
+      rgba(91, 108, 255, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      700px 320px at 10% 110%,
+      rgba(138, 92, 255, 0.14),
+      transparent 60%
+    ),
+    var(--card);
 }
 
-.ticket-head{
-  display:flex;
+/* Override khusus LIGHT mode */
+html[data-theme="light"] .ticket-card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+
+  background: radial-gradient(
+      900px 380px at 90% -10%,
+      rgba(91, 108, 255, 0.18),
+      transparent 60%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.72));
+}
+
+.ticket-head {
+  display: flex;
   justify-content: space-between;
-  align-items:center;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-.ticket-title{
+.ticket-title {
   font-weight: 800;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
 }
 
-.ticket-badge{
+.ticket-badge {
   font-size: 11px;
   font-weight: 800;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(120,92,255,.35);
-  background: rgba(120,92,255,.10);
+  border: 1px solid rgba(91, 108, 255, 0.35);
+  background: rgba(91, 108, 255, 0.14);
+  color: var(--text);
 }
 
-.ticket-number{
+/* Nomor tiket */
+.ticket-number {
   font-size: 56px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: -1px;
   margin: 6px 0 8px;
+  color: rgba(232, 238, 252, 0.95); /* biar tegas di dark */
+}
+html[data-theme="light"] .ticket-number {
+  color: #2733ff; /* accent di light */
 }
 
-.ticket-meta{
-  opacity: .85;
+.ticket-meta {
   font-size: 14px;
+  color: var(--muted);
 }
 
-.ticket-actions{
-  display:flex;
+.ticket-actions {
+  display: flex;
   gap: 10px;
   margin-top: 14px;
   flex-wrap: wrap;
 }
 
-.ticket-hint{
-  opacity: .7;
+.ticket-hint {
   font-size: 12px;
   margin-top: 12px;
+  color: var(--muted);
+  opacity: 0.85;
 }
 
-/* Sedang dipanggil (biar jelas dan konsisten) */
-.called-wrap{
+/* Sedang dipanggil (supaya tidak terang di dark) */
+.called-wrap {
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(0,0,0,.06);
-  background: rgba(255,255,255,.55);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+}
+html[data-theme="light"] .called-wrap {
+  background: rgba(255, 255, 255, 0.7);
 }
 
-.called-number{
+.called-number {
   font-size: 48px;
   line-height: 1;
   font-weight: 900;
@@ -1003,14 +1039,14 @@ html[data-theme="light"] .input {
 }
 
 /* Tombol disabled biar tidak "jelek" */
-button:disabled{
-  opacity: .65;
+button:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 /* Responsive: kalau layar kecil, jadi 1 kolom */
-@media (max-width: 960px){
-  .queue-public-grid{
+@media (max-width: 960px) {
+  .queue-public-grid {
     grid-template-columns: 1fr;
   }
 }

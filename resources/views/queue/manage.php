@@ -5,14 +5,21 @@ function qnum($n)
 {
   return 'A-' . (int)$n;
 }
+
+// ✅ FIX: pastikan $publicUrl ada
+$publicUrl = $publicUrl ?? (isset($branch['qr_token']) ? base_url('/q?token=' . $branch['qr_token']) : '');
 ?>
+
 <section class="page">
   <div class="page-head">
     <div>
       <div class="muted">Kelola Antrean</div>
       <h2 class="page-title"><?= htmlspecialchars($branch['name']) ?></h2>
-      <div class="muted">Public link: <span class="mono"><?= htmlspecialchars($publicUrl ?? $publicurl ?? '') ?></span>
+      <div class="muted">
+        Public link:
+        <span class="mono"><?= $publicUrl !== '' ? htmlspecialchars($publicUrl ?? $publicurl ?? '') : '-' ?></span>
       </div>
+
     </div>
 
     <div class="page-actions">
